@@ -1,0 +1,7 @@
+"","           Irradiation.Event.Type","Positioner.Primary.Angle..deg.","Positioner.Secondary.Angle..deg.","Field.of.View..cm.","  LD"
+"","FLUOROSCOPY           :    0  ","Min.   :-111.0000  ","Min.   :-22.1000  ","Min.   : 0.00  ","LD-:6309  "
+"","ROTATIONAL_ACQUISITION:    0  ","1st Qu.:  -6.4000  ","1st Qu.: -0.4000  ","1st Qu.:16.00  ","LD+:4802  "
+"","STATIONARY_ACQUISITION:    0  ","Median :   0.2000  ","Median :  0.1000  ","Median :20.00  ",NA
+"","STEPPING_ACQUISITION  :    0  ","Mean   :   0.2132  ","Mean   :  0.7576  ","Mean   :22.74  ",NA
+"","CBCT+                 :    0  ","3rd Qu.:  22.9000  ","3rd Qu.:  2.0000  ","3rd Qu.:32.00  ",NA
+"","CBCT-                 :11111  ","Max.   :  98.9000  ","Max.   : 16.5000  ","Max.   :40.00  ",NA
