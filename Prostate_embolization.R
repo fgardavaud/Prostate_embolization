@@ -5,21 +5,19 @@
 ##                                                                  ##                                 
 ######################################################################
 
-# created by François Gardavaud
-# date : 02/17/2020
+# created by François Gardavaud, MPE, M.Sc. Medical imaging department - Tenon University Hospital
+# date of creation : 02/17/2020
+
+# update for version : 05/12/2021
+# last review : 
+# project lead by Dr. Matthias Barral, MD, PhD. Medical imaging department - Tenon University Hospital
 
 ###################### set-up section ################################
 
-# Set the projet path to the root level -
+# Set the project path to the root level -
 root.dir = rprojroot::find_rstudio_root_file()
 
-# # load readxl package to read easyly Excel file with an install conditon
-# if(!require(readxl)){
-#   install.packages("readxl")
-#   library(readxl)
-# }
-
-# load lubridate package to determine patient age from birthdate with an install conditon
+# load lubridate package to determine patient age from birthday with an install condition
 if(!require(lubridate)){
   install.packages("lubridate")
   library(lubridate)
@@ -30,41 +28,30 @@ if(!require(doMC)){
   install.packages("doMC")
   library(doMC)
 }
-# load foreach package for parallel computing on for loop
-if(!require(foreach)){
-  install.packages("foreach")
-  library(foreach)
-}
-# load doparallel package to determine patient age from birthdate with an install conditon
-# if(!require(doParallel)){
-#   install.packages("doParallel")
-#   library(doParallel)
-# }
+
 # load tictoc package to measure running time of R code
 if(!require(tictoc)){
   install.packages("tictoc")
   library(tictoc)
 }
+
 # load excel package to write results in Excel file
 if(!require(openxlsx)){
   install.packages("openxlsx")
   library(openxlsx)
 }
-# load dplyr for data handling
-if(!require(dplyr)){
-  install.packages("dplyr")
-  library(dplyr)
+
+# load tidyverse for data science such as data handling and visualization
+if(!require(tidyverse)){
+  install.packages("tidyverse")
+  library(tidyverse)
 }
-# load prettyR package for better statistical analysis
-if(!require(prettyR)){
-  install.packages("prettyR")
-  library(prettyR)
-}
-# # load sulmarytoolspackage for better table output
-# if(!require(summarytools)){
-#   install.packages("summarytools")
-#   library(summarytools)
-# }
+
+###############################################################################################################
+###############################################################################################################
+######################### First part : data pre-treatment #####################################################
+###############################################################################################################
+###############################################################################################################
 
 
 ############################### data import section ##################################
@@ -72,21 +59,26 @@ if(!require(prettyR)){
 # my_all_data <- read_excel("data/CV-IR_Tenon_Radiologie_detailed_data_export_tronque.xlsx")
 
 ## /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
-# unfortunetely Excel importation yield to parse errors in date data for instance.
-# SO TO AVIOD THIS PROBLEM THE USER HAVE TO IMPORT DATA IN CSV FORMAT 
+# unfortunately Excel importation yield to parse errors in date data for instance.
+# SO TO AVOID THIS PROBLEM THE USER HAVE TO IMPORT DATA IN CSV FORMAT 
 # BY CONVERTING ORIGINAL DATA FROM .XLSX TO .CSV IN EXCEL SOFTWARE
 # /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
 
 tic("to import detailled data in Rstudio")
-#my_all_data <- read.csv2("data/CV-IR_Tenon_Radiologie_detailed_data_export_tronque.csv", sep = ";")
 if(exists("my_all_data")){
   print("raw data importation have already done")
 }else{
-  my_all_data <- read.csv2("data/CV-IR_Tenon_Radiologie_detailed_data_export.csv", sep = ";")
+ # my_all_data <- read.csv2("data/CV-IR_Tenon_Radiologie_detailed_data_export.csv", sep = ";")
+  # operations to correctly read DoseWatch export file *NEW* format only for DoseWatch v3.2.3 and above.
+  # if you have DoseWatch v3.1 or under comment the three following lines and uncomment the last previous command line.
+  all_content = readLines("data_v2/Interventional_Tenon_Radiologie_detailed_data_export.csv") # to read the whole file
+  skip_content = all_content[-c(1,2,3)] # to suppress the first 3 rows with bad value yield to bad header with read.csv2 function
+  DoseWatch_export <- read.csv2(textConnection(skip_content), sep = ";")
+  my_all_data <- read.csv2("data_v2/Interventional_Tenon_Radiologie_detailed_data_export.csv", sep = ";")
 }
 toc()
 
-################################## data tayloring section ##################################
+################################## data tailoring section ##################################
 # Collums of interest selection
 selection = c("Study.date..YYYY.MM.DD.", "Accession.number",
               "Patient.ID", "Patient.birthdate..YYYY.MM.DD.",
@@ -103,7 +95,7 @@ selection = c("Study.date..YYYY.MM.DD.", "Accession.number",
               "Positioner.Primary.Angle..deg.", "Positioner.Secondary.Angle..deg.",
               "Field.of.View..cm.")
 
-# data filter to keep only interested collums for this study
+# data filter to keep only interested columns for this study
 Study_data <- my_all_data[,selection]
 
 
@@ -111,11 +103,11 @@ Study_data <- my_all_data[,selection]
 
 #  add new levels for Irradiation.Event.Type as CBCT+/-
 levels(Study_data$Irradiation.Event.Type) <- c(levels(Study_data$Irradiation.Event.Type), "CBCT+","CBCT-")
-# rename factors for none CBCT acqusition
+# rename factors for none CBCT acquisition
 Study_data$Irradiation.Event.Type[Study_data$Irradiation.Event.Type == 'FLUOROSCOPY'] <- 'CBCT-'
 Study_data$Irradiation.Event.Type[Study_data$Irradiation.Event.Type == 'STATIONARY_ACQUISITION'] <- 'CBCT-'
 Study_data$Irradiation.Event.Type[Study_data$Irradiation.Event.Type == 'STEPPING_ACQUISITION'] <- 'CBCT-'
-# rename factor for CBCT acqusition
+# rename factor for CBCT acquisition
 Study_data$Irradiation.Event.Type[Study_data$Irradiation.Event.Type == 'ROTATIONAL_ACQUISITION'] <- 'CBCT+'
 
 #  create new levels as LD+/-
@@ -123,7 +115,7 @@ print("Large display have been installed since 2019-06-27")
 LD <- Study_data$Study.date..YYYY.MM.DD.
 LD <- gsub("[: -]", "" , LD, perl=TRUE) # delete ":" , " ", and "-" from the date value
 LD <- as.numeric(LD) # convert LD in numeric format to apply cut function
-LD <- cut(LD,c(20180101,20190627, Inf),c("LD-","LD+")) # cut to segemnt date between LD+ and LD- 
+LD <- cut(LD,c(20180101,20190627, Inf),c("LD-","LD+")) # cut to segment date between LD+ and LD- 
 LD <- factor(as.character(LD),levels=c("LD-","LD+")) # convert factor in character
 Study_data$LD <- LD # add LD factor to the data frame
 
@@ -136,7 +128,7 @@ Patient.Age <- rep(0, nrow(Study_data))
 
 # Loop with parallelization to calculate patient age in years 
 # and add this information to Study_data dataframe
-# also have a condition to test global environement objet for debugging
+# also have a condition to test global environment object for debugging
 tic("for loop with parallelization")
 if(exists("Study_data_age")){
   print("patient age computation have already done")
@@ -162,7 +154,7 @@ Study_data_prostate <- subset(Study_data_age, Standard.study.description == "EMB
 # patient and exam number control
 patient_number <- length(unique(Study_data_prostate[,"Patient.ID"]))
 exam_number <- length(unique(Study_data_prostate[,"Accession.number"]))
-# patient ID control with Mathias list to verify if selectde patients are identical than matthias' list
+# patient ID control with Mathias list to verify if selected patients are identical than matthias' list
 patient_list_matthias <- read.csv2("data/Liste_patient_matthias.csv", sep = ";")
 patient_list_matthias_DW <- as.data.frame(patient_list_matthias[,2])
 colnames(patient_list_matthias_DW) <- 'Patient.ID.Matthias'
@@ -236,7 +228,7 @@ temp_DAP_fluoro <- as.data.frame(as.numeric(levels(Study_data_prostate_stat_uniq
 colnames(temp_DAP_fluoro) <- c("Total.Fluoro.DAP") # add colnames for labellization
 temp_DAP_graph <- as.data.frame(as.numeric(levels(Study_data_prostate_stat_unique[,9]))[Study_data_prostate_stat_unique[,9]]) # convert factor with level to a dataframe with numeric value
 colnames(temp_DAP_graph) <- c("Total.Acquisition.DAP") # add colnames for labellization
-Study_data_prostate_stat_unique <- cbind(Study_data_prostate_stat_unique[,1:8], temp_DAP_fluoro, temp_DAP_graph, Study_data_prostate_stat_unique[,11:17]) # bind alll columns for summary
+Study_data_prostate_stat_unique <- cbind(Study_data_prostate_stat_unique[,1:8], temp_DAP_fluoro, temp_DAP_graph, Study_data_prostate_stat_unique[,11:17]) # bind all columns for summary
 write.csv(Study_data_prostate_stat_unique, "output/Study_data_prostate_stat_unique.csv")
 write.xlsx(Study_data_prostate_stat_unique, "output/Study_data_prostate_stat_unique.xlsx")
 
@@ -247,13 +239,13 @@ write.csv(Global_stat_unique_value, "output/stats/Global_stat_unique_value.csv")
 
 Study_data_prostate_stat_multiple <- Study_data_prostate_stat[ ,21:23] # to select FOV and incidence angles columns
 FOV_ok_list <- which(Study_data_prostate_stat_multiple$Field.of.View > 0) # to keep only FOV > 0 as FOV value = 0 it's an DoseWatch export error
-Study_data_prostate_stat_multiple <- Study_data_prostate_stat_multiple[FOV_ok_list,] # to supress FOV bad value
+Study_data_prostate_stat_multiple <- Study_data_prostate_stat_multiple[FOV_ok_list,] # to suppress FOV bad value
 Global_stat_multiple_value <- summary(Study_data_prostate_stat_multiple)
 write.csv(Global_stat_multiple_value, "output/stats/Global_stat_FOV&incidence_angle.csv")
 
 
 ################ CBCT acquisition analysis #############################
-# Summary of acquisition type repartition between all examinations
+# Summary of acquisition type distribution between all examinations
 Acquisition_table <- table(Study_data_prostate$Patient.ID, Study_data_prostate$Irradiation.Event.Type)
 CBCT_position <- which(Study_data_prostate$Irradiation.Event.Type == "CBCT+")
 
@@ -271,10 +263,10 @@ Exam_ID_list_CBCT <- table(Study_data_prostate_CBCT$Study_data_prostate_CBCT.Acc
 # write.csv(CBCT_stat, "output/stats/CBCT_patient_stat.csv")
 
 #CBCT_mean <- mean(Exam_ID_list_CBCT)
-### graphic to illustrate CBCT acquisition repartition
+### graphic to illustrate CBCT acquisition distribution
 # lbls <- Study_data_prostate_CBCT$Study_data_prostate_CBCT.Accession.number # create label = accession number
-Study_data_prostate_CBCT_acquisition_num <- as.numeric(Exam_ID_list_CBCT,2) # convert factor in numeric value for pourcent
-pct <- round(Study_data_prostate_CBCT_acquisition_num/sum(Study_data_prostate_CBCT_acquisition_num)*100,1) # generate pourcent of CBCT acquisition
+Study_data_prostate_CBCT_acquisition_num <- as.numeric(Exam_ID_list_CBCT,2) # convert factor in numeric value for percent
+pct <- round(Study_data_prostate_CBCT_acquisition_num/sum(Study_data_prostate_CBCT_acquisition_num)*100,1) # generate percent of CBCT acquisition
 lbls <- paste(pct) # add percents to labels
 lbls <- paste(lbls,"%",sep="") # ad % to labels 
 pie(Exam_ID_list_CBCT, labels = lbls, col=rainbow(length(lbls)), main = "CBCT acquisiton number for each patient")
@@ -301,11 +293,11 @@ dev.print(device = png, file = "output/CBCT_protocols_absolute.png", width = 600
 
 # Summary of FOV distribution between all examinations
 FOV_table <- table(droplevels(Study_data_prostate$Patient.ID), Study_data_prostate$Field.of.View..cm.)
-FOV_table <- FOV_table[,2:5] # supress FOV = 0 cm column as it's an error of DoseWatch export
-FOV_table <- round(prop.table(FOV_table, margin = 1)*100) # table in purcent for each examn
+FOV_table <- FOV_table[,2:5] # suppress FOV = 0 cm column as it's an error of DoseWatch export
+FOV_table <- round(prop.table(FOV_table, margin = 1)*100) # table in percent for each exam
 
 
-FOV_tab_total <- round(prop.table(addmargins(FOV_table,1),1)*100,1)  # FOV frequencies in purcent by patient plus total frequency
+FOV_tab_total <- round(prop.table(addmargins(FOV_table,1),1)*100,1)  # FOV frequencies in percent by patient plus total frequency
 # FOV_tab_total <- cbind(addmargins(prop.table(addmargins(FOV_table,1),1),2), c(margin.table(FOV_table,1),sum(FOV_table)))
 # colnames(FOV_tab_total)<-c(colnames(FOV_table),"TOTAL","EFFECTIF") 
 
@@ -314,7 +306,7 @@ FOV_tab_total <- round(prop.table(addmargins(FOV_table,1),1)*100,1)  # FOV frequ
 #
 lbls <- colnames(FOV_tab_total) # create label = FOV size
 lbls <- paste(lbls, "cm") # add cm
-pct <- round(tail(FOV_tab_total,1)/sum(tail(FOV_tab_total,1))*100) # generate pourcent of total FOV size
+pct <- round(tail(FOV_tab_total,1)/sum(tail(FOV_tab_total,1))*100) # generate percent of total FOV size
 lbls <- paste(lbls, pct, sep = ", \n") # add percents to labels
 lbls <- paste(lbls," %",sep="") # ad % to labels 
 pie(tail(FOV_tab_total,1), labels = lbls, cex =0.9, main = "FOV distribution in all examinations")
@@ -333,11 +325,11 @@ dev.print(device = png, file = "output/FOV_distribution_asolute.png", width = 60
 ################ FOV distribution CBCT+/- #############################
 
 FOV_CBCT_table <- table(droplevels(Study_data_prostate$Irradiation.Event.Type), Study_data_prostate$Field.of.View..cm.)
-FOV_CBCT_table <- FOV_CBCT_table[,2:5] # supress FOV = 0 cm column as it's an error of DoseWatch export
-FOV_CBCT_table_pourcent <- round(prop.table(FOV_CBCT_table, margin = 1)*100) # table in purcent for each examn
+FOV_CBCT_table <- FOV_CBCT_table[,2:5] # suppress FOV = 0 cm column as it's an error of DoseWatch export
+FOV_CBCT_table_pourcent <- round(prop.table(FOV_CBCT_table, margin = 1)*100) # table in percent for each exam
 
 
-FOV_tab_CBCT_total <- round(prop.table(addmargins(FOV_CBCT_table,1),1)*100,1)  # FOV frequencies in purcent by patient plus total frequency
+FOV_tab_CBCT_total <- round(prop.table(addmargins(FOV_CBCT_table,1),1)*100,1)  # FOV frequencies in percent by patient plus total frequency
 # FOV_tab_total <- cbind(addmargins(prop.table(addmargins(FOV_table,1),1),2), c(margin.table(FOV_table,1),sum(FOV_table)))
 # colnames(FOV_tab_total)<-c(colnames(FOV_table),"TOTAL","EFFECTIF") 
 
@@ -346,9 +338,9 @@ FOV_tab_CBCT_total <- round(prop.table(addmargins(FOV_CBCT_table,1),1)*100,1)  #
 #
 lbls <- colnames(FOV_tab_CBCT_total) # create label = FOV size
 lbls <- paste(lbls, "cm") # add cm
-pct_CBCT_total <- round(tail(FOV_tab_CBCT_total,1)/sum(tail(FOV_tab_CBCT_total,1))*100) # generate pourcent of total FOV size
-pct_CBCT_plus <- round(head(FOV_tab_CBCT_total,1)/sum(head(FOV_tab_CBCT_total,1))*100) # generate pourcent of total FOV size
-pct_CBCT_minus <- round(FOV_tab_CBCT_total[2,]/sum(FOV_tab_CBCT_total[2,])*100) # generate pourcent of total FOV size
+pct_CBCT_total <- round(tail(FOV_tab_CBCT_total,1)/sum(tail(FOV_tab_CBCT_total,1))*100) # generate percent of total FOV size
+pct_CBCT_plus <- round(head(FOV_tab_CBCT_total,1)/sum(head(FOV_tab_CBCT_total,1))*100) # generate percent of total FOV size
+pct_CBCT_minus <- round(FOV_tab_CBCT_total[2,]/sum(FOV_tab_CBCT_total[2,])*100) # generate percent of total FOV size
 lbls_total <- paste(lbls, pct_CBCT_total, sep = ", \n") # add percents to labels
 lbls_total <- paste(lbls_total," %",sep="") # ad % to labels 
 pie(tail(FOV_tab_CBCT_total,1), labels = lbls_total, cex =0.9, main = "FOV distribution with or without CBCT acquisitions")
@@ -366,18 +358,18 @@ dev.print(device = png, file = "output/FOV_CBCTminus_distribution.png", width = 
 ################ FOV distribution LD+/- #############################
 
 FOV_LD_table <- table(droplevels(Study_data_prostate$LD), Study_data_prostate$Field.of.View..cm.)
-FOV_LD_table <- FOV_LD_table[,2:5] # supress FOV = 0 cm column as it's an error of DoseWatch export
-FOV_LD_table_pourcent <- round(prop.table(FOV_LD_table, margin = 1)*100) # table in purcent for each examn
+FOV_LD_table <- FOV_LD_table[,2:5] # suppress FOV = 0 cm column as it's an error of DoseWatch export
+FOV_LD_table_pourcent <- round(prop.table(FOV_LD_table, margin = 1)*100) # table in percent for each exam
 
-FOV_tab_LD_total <- round(prop.table(addmargins(FOV_LD_table,1),1)*100,1)  # FOV frequencies in purcent by patient plus total frequency
+FOV_tab_LD_total <- round(prop.table(addmargins(FOV_LD_table,1),1)*100,1)  # FOV frequencies in percent by patient plus total frequency
 
 # ### graphic to illustrate FOV distribution in all examinations
 #
 lbls <- colnames(FOV_tab_LD_total) # create label = FOV size
 lbls <- paste(lbls, "cm") # add cm
-pct_LD_total <- round(tail(FOV_tab_LD_total,1)/sum(tail(FOV_tab_LD_total,1))*100) # generate pourcent of total FOV size
-pct_LD_plus <- round(FOV_tab_LD_total[2,]/sum(FOV_tab_LD_total[2,])*100) # generate pourcent of total FOV size
-pct_LD_minus <- round(head(FOV_tab_LD_total,1)/sum(head(FOV_tab_LD_total,1))*100) # generate pourcent of total FOV size
+pct_LD_total <- round(tail(FOV_tab_LD_total,1)/sum(tail(FOV_tab_LD_total,1))*100) # generate percent of total FOV size
+pct_LD_plus <- round(FOV_tab_LD_total[2,]/sum(FOV_tab_LD_total[2,])*100) # generate percent of total FOV size
+pct_LD_minus <- round(head(FOV_tab_LD_total,1)/sum(head(FOV_tab_LD_total,1))*100) # generate percent of total FOV size
 lbls_total <- paste(lbls, pct_LD_total, sep = ", \n") # add percents to labels
 lbls_total <- paste(lbls_total," %",sep="") # ad % to labels 
 pie(tail(FOV_tab_LD_total,1), labels = lbls_total, cex =0.9, main = "FOV distribution with all displays configurations")
