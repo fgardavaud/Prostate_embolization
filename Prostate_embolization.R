@@ -8,8 +8,8 @@
 # created by François Gardavaud, MPE, M.Sc. Medical imaging department - Tenon University Hospital
 # date of creation : 02/17/2020
 
-# update for version : 05/12/2021
-# last review : 
+# update for version : 06/28/2021
+# last review : second version to compare
 # project lead by Dr. Matthias Barral, MD, PhD. Medical imaging department - Tenon University Hospital
 
 ###################### set-up section ################################
