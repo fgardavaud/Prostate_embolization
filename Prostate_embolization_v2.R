@@ -8,7 +8,7 @@
 # created by François Gardavaud, MPE, M.Sc. Medical imaging department - Tenon University Hospital
 # date of creation : 07/02/2020
 
-# date of the last update : 
+# date of the last update : 07/08/2021
 # last review : second version to compare the use or non-use of VesselAssist software
 # project lead by Dr. Matthias Barral, MD, PhD. Medical imaging department - Tenon University Hospital
 
@@ -45,6 +45,12 @@ if(!require(openxlsx)){
 if(!require(tidyverse)){
   install.packages("tidyverse")
   library(tidyverse)
+}
+
+# load factoshiny for statistical computation aid
+if(!require(Factoshiny)){
+  install.packages("Factoshiny")
+  library(Factoshiny)
 }
 
 ###############################################################################################################
@@ -110,7 +116,7 @@ Patient.Age <- rep(0, nrow(DoseWatch_Selected_data))
 # and add this information to Study_data dataframe
 # also have a condition to test global environment object for debugging
 tic("for loop with parallelization")
-if(exists("Study_data_age")){
+if(exists("Patient.Age")){
   print("patient age computation have already done")
 }else{
   cores <- detectCores()
@@ -183,12 +189,46 @@ Study_data_selected_exam <- Study_data_selected_age %>% filter(Accession.number 
 # sort each line by Study date and then by acquisition hour
 Study_data_selected_exam <- arrange(Study_data_selected_exam, Study.date..YYYY.MM.DD., Series.Time)
 
+
+####### VesselAssist software using (VA) +/- labelization  ###########################
+
+
+#  create new levels as +/- VA
+print("VesselAssist have been installed since 2020-11-01")
+print("All exams generated after 2020-10-31 are considered as performed with VesselAssist software")
+VA <- Study_data_selected_exam$Study.date..YYYY.MM.DD.
+VA <- gsub("[: -]", "" , VA, perl=TRUE) # delete ":" , " ", and "-" from the date value
+VA <- as.numeric(VA) # convert VA in numeric format to apply cut function
+VA <- cut(VA,c(20200512,20201031, Inf),c("VA-","VA+")) # cut to segment date between VA+ and VA- 
+VA <- factor(as.character(VA),levels=c("VA-","VA+")) # convert factor in character
+Study_data_selected_exam$VA <- VA # add VA factor to the data frame
+
+# Remove duplicates in order to have only one row by exam
+## /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
+# if you have several exam without accession number associated the following.
+# command line will only keep the first exam without accession number 
+#  SO YOU COULD LOST DATA INFORMATION
+# /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
+Study_data_selected_exam_without_duplicates <- Study_data_selected_exam[!duplicated(Study_data_selected_exam$Accession.number), ] # to keep only one row for each exam time.
+# to select only row that not depends on sequence parameters
+Study_data_selected_exam_without_duplicates <- Study_data_selected_exam_without_duplicates %>% select(Study.date..YYYY.MM.DD., Patient.ID, Accession.number,
+                                                                                                                                  Patient.Age,
+                                                                                                                                  Patient.weight..kg., Patient.size..cm.,
+                                                                                                                                  BMI,
+                                                                                                                                  Peak.Skin.Dose..mGy.,
+                                                                                                                                  Image.and.Fluoroscopy.Dose.Area.Product..mGy.cm2.,
+                                                                                                                                  Total.Acquisition.DAP..mGy.cm..,Total.Fluoro.DAP..mGy.cm..,
+                                                                                                                                  Total.Air.Kerma..mGy.,
+                                                                                                                                  Total.Acquisition.Air.Kerma..mGy., Total.Fluoro.Air.Kerma..mGy.,
+                                                                                                                                  Total.Time.of.Fluoroscopy..s., Number.of.Acquisition.Series,
+                                                                                                                                  Dose.Preference, VA)
+
 ################## Global environment cleaning ###########################
 
 # Remove dataframe which don't still have any interest
-if(exists("Patient.Age")) {
+if(exists("VA")) {
   print("Global environment will be clean")
-  rm (Patient.Age, DoseWatch_Selected_data, Study_data_selected_age, Study_data_age, all_content, skip_content)
+  rm (DoseWatch_Selected_data, Study_data_selected_age, Study_data_age, all_content, skip_content, VA)
 }else{
   print("Global environment already clean")
 }
@@ -196,17 +236,7 @@ if(exists("Patient.Age")) {
 
 
 
-####### VesselAssist software using (VA) +/- labelization  ###########################
 
-
-#  create new levels as +/- VA
-print("VesselAssist have been installed since 2020-11-01")
-VA <- Study_data_selected_exam$Study.date..YYYY.MM.DD.
-VA <- gsub("[: -]", "" , VA, perl=TRUE) # delete ":" , " ", and "-" from the date value
-VA <- as.numeric(VA) # convert VA in numeric format to apply cut function
-VA <- cut(VA,c(20200512,20201031, Inf),c("VA-","VA+")) # cut to segment date between VA+ and VA- 
-VA <- factor(as.character(VA),levels=c("VA-","VA+")) # convert factor in character
-Study_data_selected_exam$VA <- VA # add VA factor to the data frame
 
 
 ##########################################################################
@@ -216,6 +246,14 @@ Study_data_selected_exam$VA <- VA # add VA factor to the data frame
 ##########################################################################
 ##########################################################################
 ##########################################################################
+
+# load factoshiny GUI to create statistical computation.
+# enregistrer le dataframe en .csv et l'ouvrir avec factoShiny pour éviter les conflits de format.
+
+
+res <- Factoshiny(Study_data_selected_exam_without_duplicates)
+
+
 
 ############### main statistical analysis #################
 # global stat for unique value by exam
