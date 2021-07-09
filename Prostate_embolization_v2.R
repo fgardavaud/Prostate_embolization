@@ -51,7 +51,12 @@ if(!require(tidyverse)){
 if(!require(Factoshiny)){
   install.packages("Factoshiny")
   library(Factoshiny)
+}# load factoshiny for statistical computation aid
+if(!require(FactoMineR)){
+  install.packages("FactoMineR")
+  library(FactoMineR)
 }
+
 
 ###############################################################################################################
 ###############################################################################################################
@@ -234,11 +239,6 @@ if(exists("VA")) {
 }
 
 
-
-
-
-
-
 ##########################################################################
 ##########################################################################
 ##########################################################################
@@ -247,11 +247,25 @@ if(exists("VA")) {
 ##########################################################################
 ##########################################################################
 
-# load factoshiny GUI to create statistical computation.
-# enregistrer le dataframe en .csv et l'ouvrir avec factoShiny pour éviter les conflits de format.
+# selected only interested columns for Factoshyny package
 
+Study_data_selected_exam_without_duplicates_factoshiny <- Study_data_selected_exam_without_duplicates %>% select(Patient.Age,
+                                                                                                      Patient.weight..kg., Patient.size..cm.,
+                                                                                                      BMI,
+                                                                                                      Peak.Skin.Dose..mGy.,
+                                                                                                      Image.and.Fluoroscopy.Dose.Area.Product..mGy.cm2.,
+                                                                                                      Total.Acquisition.DAP..mGy.cm..,Total.Fluoro.DAP..mGy.cm..,
+                                                                                                      Total.Air.Kerma..mGy.,
+                                                                                                      Total.Acquisition.Air.Kerma..mGy., Total.Fluoro.Air.Kerma..mGy.,
+                                                                                                      Total.Time.of.Fluoroscopy..s., Number.of.Acquisition.Series,
+                                                                                                      VA)
 
-res <- Factoshiny(Study_data_selected_exam_without_duplicates)
+## /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
+## /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
+# execute manually the following line to launch correctly Factoshiny as the ~ character in path file/dataframe is not correctly recognize by Factoshiny/FactoMiner package
+## /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
+## /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
+Factoshiny(Study_data_selected_exam_without_duplicates_factoshiny)
 
 
 
