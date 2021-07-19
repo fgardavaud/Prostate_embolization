@@ -247,17 +247,16 @@ if(exists("VA")) {
 ##########################################################################
 ##########################################################################
 
-# selected only interested columns for Factoshiny package
+# selected only interested columns for Factoshiny package (cos2 > 0.6)
 
-Study_data_selected_exam_without_duplicates_factoshiny <- Study_data_selected_exam_without_duplicates %>% select(Accession.number, Patient.Age,
-                                                                                                      Patient.weight..kg., Patient.size..cm.,
+Study_data_selected_exam_without_duplicates_factoshiny <- Study_data_selected_exam_without_duplicates %>% select(Accession.number,
+                                                                                                      Patient.weight..kg.,
                                                                                                       BMI,
                                                                                                       Peak.Skin.Dose..mGy.,
                                                                                                       Image.and.Fluoroscopy.Dose.Area.Product..mGy.cm2.,
-                                                                                                      Total.Acquisition.DAP..mGy.cm..,Total.Fluoro.DAP..mGy.cm..,
+                                                                                                      Total.Fluoro.DAP..mGy.cm..,
                                                                                                       Total.Air.Kerma..mGy.,
-                                                                                                      Total.Acquisition.Air.Kerma..mGy., Total.Fluoro.Air.Kerma..mGy.,
-                                                                                                      Total.Time.of.Fluoroscopy..s., Number.of.Acquisition.Series,
+                                                                                                      Total.Fluoro.Air.Kerma..mGy.,
                                                                                                       VA)
 
 
