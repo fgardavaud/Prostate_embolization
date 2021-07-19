@@ -33,3 +33,5 @@ vignettes/*.pdf
 # patient information exclusion
 *.csv
 *.xlsx
+*.html
+Rapport*
