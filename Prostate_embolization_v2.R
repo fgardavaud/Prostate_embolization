@@ -6,9 +6,9 @@
 ######################################################################
 
 # created by François Gardavaud, MPE, M.Sc. Medical imaging department - Tenon University Hospital
-# date of creation : 07/02/2020
+# date of creation : 02/07/2020
 
-# date of the last update : 07/08/2021
+# date of the last update : 21/07/2021
 # last review : second version to compare the use or non-use of VesselAssist software
 # project lead by Dr. Matthias Barral, MD, PhD. Medical imaging department - Tenon University Hospital
 
@@ -66,8 +66,7 @@ if(!require(FactoMineR)){
 
 
 ############################### data import section ##################################
-# read the database with data frame existing test
-# my_all_data <- read_excel("data/CV-IR_Tenon_Radiologie_detailed_data_export_tronque.xlsx")
+
 
 ## /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
 # unfortunately Excel importation yield to parse errors in date data for instance.
@@ -75,11 +74,13 @@ if(!require(FactoMineR)){
 # BY CONVERTING ORIGINAL DATA FROM .XLSX TO .CSV IN EXCEL SOFTWARE
 # /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
 
+# the study is based from patient database extracted between 02/01/2018 to 4/06/2021
+
 tic("to import detailled data in Rstudio")
-if(exists("my_all_data")){
+if(exists("DoseWatch_export")){
   print("raw data importation have already done")
 }else{
- # my_all_data <- read.csv2("data/CV-IR_Tenon_Radiologie_detailed_data_export.csv", sep = ";")
+ 
   # operations to correctly read DoseWatch export file *NEW* format only for DoseWatch v3.2.3 and above.
   # if you have DoseWatch v3.1 or under comment the three following lines and uncomment the last previous command line.
   all_content = readLines("data_v2/Interventional_Tenon_Radiologie_detailed_data_export.csv") # to read the whole file
@@ -121,7 +122,7 @@ Patient.Age <- rep(0, nrow(DoseWatch_Selected_data))
 # and add this information to Study_data dataframe
 # also have a condition to test global environment object for debugging
 tic("for loop with parallelization")
-if(exists("age")){
+if(exists("Study_data_selected_exam_without_duplicates")){
   print("patient age computation have already done")
 }else{
   cores <- detectCores()
@@ -189,7 +190,26 @@ Study_data_selected_exam <- Study_data_selected_age %>% filter(Accession.number 
                                                                  Accession.number == 30045035470 | Accession.number == 30044195855 |
                                                                  Accession.number == 30044600813 | Accession.number == 30045986706 |
                                                                  Accession.number == 30045792078 | Accession.number == 30045807821 |
-                                                                 Accession.number == 30046467063 | Accession.number == 30046484391) 
+                                                                 Accession.number == 30046467063 | Accession.number == 30046484391 |
+                                                                 Accession.number == 30032928352 | Accession.number == 30033153121 |
+                                                                 Accession.number == 30031838672 | Accession.number == 30031800470 |
+                                                                 Accession.number == 30032107360 | Accession.number == 30031800592 |
+                                                                 Accession.number == 30029780414 | Accession.number == 30031185851 |
+                                                                 Accession.number == 30030160986 | Accession.number == 30031001792 |
+                                                                 Accession.number == 30030533112 | Accession.number == 30028117919 |
+                                                                 Accession.number == 30028125485 | Accession.number == 30028694354 |
+                                                                 Accession.number == 30028276798 | Accession.number == 30027925109 |
+                                                                 Accession.number == 30026441418 | Accession.number == 30026114824 |
+                                                                 Accession.number == 30025841249 | Accession.number == 30026163655 |
+                                                                 Accession.number == 30026298414 | Accession.number == 30023767089 |
+                                                                 Accession.number == 30023346300 | Accession.number == 30023813528 |
+                                                                 Accession.number == 30023239878 | Accession.number == 30022654755 |
+                                                                 Accession.number == 30022626205 | Accession.number == 30021239922 |
+                                                                 Accession.number == 30021173788 | Accession.number == 30019846218 |
+                                                                 Accession.number == 30017681129 | Accession.number == 30017086347 |
+                                                                 Accession.number == 30016180136 | Accession.number == 30016128315 |
+                                                                 Accession.number == 30015411613 | Accession.number == 30013529532 |
+                                                                 Accession.number == 30011611853 | Accession.number == 30011104386) 
 
 # sort each line by Study date and then by acquisition hour
 Study_data_selected_exam <- arrange(Study_data_selected_exam, Study.date..YYYY.MM.DD., Series.Time)
@@ -204,7 +224,7 @@ print("All exams generated after 2020-10-31 are considered as performed with Ves
 VA <- Study_data_selected_exam$Study.date..YYYY.MM.DD.
 VA <- gsub("[: -]", "" , VA, perl=TRUE) # delete ":" , " ", and "-" from the date value
 VA <- as.numeric(VA) # convert VA in numeric format to apply cut function
-VA <- cut(VA,c(20200512,20201031, Inf),c("VA-","VA+")) # cut to segment date between VA+ and VA- 
+VA <- cut(VA,c(20180102,20201031, Inf),c("VA-","VA+")) # cut to segment date between VA+ and VA- 
 VA <- factor(as.character(VA),levels=c("VA-","VA+")) # convert factor in character
 Study_data_selected_exam$VA <- VA # add VA factor to the data frame
 
@@ -247,7 +267,7 @@ if(exists("VA")) {
 ##########################################################################
 ##########################################################################
 
-# selected only interested columns for Factoshiny package (cos2 > 0.6)
+# selected only interested columns for Factoshiny package (cos2 > 0.7)
 
 Study_data_selected_exam_without_duplicates_factoshiny <- Study_data_selected_exam_without_duplicates %>% select(Accession.number,
                                                                                                       Patient.weight..kg.,
@@ -260,9 +280,17 @@ Study_data_selected_exam_without_duplicates_factoshiny <- Study_data_selected_ex
                                                                                                       VA)
 
 
-# Converted the values in the first column (e.g patient names or accession number if you have dupplicated patient) into row names in the dataframe for Factoshiny computation
+# Converted the values in the first column (e.g patient names or accession number if you have duplicated patient) into row names in the dataframe for Factoshiny computation
 Study_data_selected_exam_without_duplicates_factoshiny <- data.frame(Study_data_selected_exam_without_duplicates_factoshiny[,-1], row.names=Study_data_selected_exam_without_duplicates_factoshiny[,1])
 
+globalstat <- summary(Study_data_selected_exam_without_duplicates)
+
+# write excel file to communicate with other people
+print("Create output Excel file for data table and main statistics")
+write.xlsx(Study_data_selected_exam_without_duplicates, "output/v2/Study_data_treated.xlsx", sheetName = "Study_data_treated",
+           col.names = TRUE, row.names = FALSE, append = FALSE, overwrite = TRUE)
+write.xlsx(globalstat, "output/v2/globalstat.xlsx", sheetName = "globalstat",
+           col.names = TRUE, row.names = FALSE, append = FALSE, overwrite = TRUE)
 
 
 ## /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
@@ -271,7 +299,15 @@ Study_data_selected_exam_without_duplicates_factoshiny <- data.frame(Study_data_
 ## /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
 ## /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
 #Factoshiny(Study_data_selected_exam_without_duplicates_factoshiny)
+
 Factoshiny(Study_data_selected_exam_without_duplicates_factoshiny)
+
+# Factoshiny output command lines post manual treatment
+# nb <- missMDA::estim_ncpPCA(Study_data_selected_exam_without_duplicates_factoshiny,quali.sup=c(8))$ncp
+# dfcompleted <- missMDA::imputePCA(Study_data_selected_exam_without_duplicates_factoshiny,ncp=nb,quali.sup=c(8))$completeObs
+# res.PCA<-PCA(dfcompleted,quali.sup=c(8),graph=FALSE)
+# plot.PCA(res.PCA,choix='var',habillage = 'contrib',title="Graphe des variables de l'ACP")
+# plot.PCA(res.PCA,invisible=c('ind.sup'),select='cos2  0.7',habillage='Peak.Skin.Dose..mGy.',title="Graphe des individus de l'ACP",cex=1.05,cex.main=1.05,cex.axis=1.05,label =c('quali'))
 
 
 # ############### main statistical analysis #################
