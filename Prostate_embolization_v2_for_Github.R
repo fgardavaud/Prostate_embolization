@@ -74,7 +74,7 @@ if(!require(FactoMineR)){
 # BY CONVERTING ORIGINAL DATA FROM .XLSX TO .CSV IN EXCEL SOFTWARE
 # /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
 
-# the study is based from patient database extracted between 02/01/2018 to 4/06/2021
+# the study is based from patient database extracted between 02/01/2018 to 1/10/2021
 
 tic("to import detailled data in Rstudio")
 if(exists("DoseWatch_export")){
@@ -261,6 +261,7 @@ write.xlsx(globalstat, "output/v2/globalstat.xlsx", sheetName = "globalstat",
 ## /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
 #Factoshiny(Study_data_selected_exam_without_duplicates_factoshiny)
 
+print("Launch Factoshiny graphical interface")
 Factoshiny(Study_data_selected_exam_without_duplicates_factoshiny)
 
 # Factoshiny output command lines post manual treatment
