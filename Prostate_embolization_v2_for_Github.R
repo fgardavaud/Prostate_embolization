@@ -220,25 +220,23 @@ if(exists("VA")) {
 }
 
 
-##########################################################################
-##########################################################################
-##########################################################################
+################################################################################################################
+######################### Second part : Statistical computation ###############################################
+###############################################################################################################
+
 ################ global statistical analysis #############################
-##########################################################################
-##########################################################################
-##########################################################################
 
 # selected only interested columns for Factoshiny package (cos2 > 0.7)
 
 Study_data_selected_exam_without_duplicates_factoshiny <- Study_data_selected_exam_without_duplicates %>% select(Accession.number,
-                                                                                                      Patient.weight..kg.,
-                                                                                                      BMI,
-                                                                                                      Peak.Skin.Dose..mGy.,
-                                                                                                      Image.and.Fluoroscopy.Dose.Area.Product..mGy.cm2.,
-                                                                                                      Total.Fluoro.DAP..mGy.cm..,
-                                                                                                      Total.Air.Kerma..mGy.,
-                                                                                                      Total.Fluoro.Air.Kerma..mGy.,
-                                                                                                      VA)
+                                                                                                                 Patient.weight..kg.,
+                                                                                                                 BMI,
+                                                                                                                 Peak.Skin.Dose..mGy.,
+                                                                                                                 Image.and.Fluoroscopy.Dose.Area.Product..mGy.cm2.,
+                                                                                                                 Total.Fluoro.DAP..mGy.cm..,
+                                                                                                                 Total.Air.Kerma..mGy.,
+                                                                                                                 Total.Fluoro.Air.Kerma..mGy.,
+                                                                                                                 VA)
 
 
 # Converted the values in the first column (e.g patient names or accession number if you have duplicated patient) into row names in the dataframe for Factoshiny computation
@@ -259,16 +257,30 @@ write.xlsx(globalstat, "output/v2/globalstat.xlsx", sheetName = "globalstat",
 # execute manually the following line to launch correctly Factoshiny as the ~ character in path file/dataframe is not correctly recognize by Factoshiny/FactoMiner package
 ## /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
 ## /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
+
+
+#print("Launch Factoshiny graphical interface")
 #Factoshiny(Study_data_selected_exam_without_duplicates_factoshiny)
 
-print("Launch Factoshiny graphical interface")
-Factoshiny(Study_data_selected_exam_without_duplicates_factoshiny)
+# Factoshiny output command lines after manual treatment
+#nb <- missMDA::estim_ncpPCA(Study_data_selected_exam_without_duplicates_factoshiny,quali.sup=c(8))$ncp
+#dfcompleted <- missMDA::imputePCA(Study_data_selected_exam_without_duplicates_factoshiny,ncp=nb,quali.sup=c(8))$completeObs
+#res.PCA<-PCA(dfcompleted,quali.sup=c(8),graph=FALSE)
+#plot.PCA(res.PCA,choix='var',habillage = 'contrib',title="Graphe des variables de l'ACP")
+#plot.PCA(res.PCA,invisible=c('ind.sup'),select='cos2  0.7',habillage='Peak.Skin.Dose..mGy.',title="Graphe des individus de l'ACP",cex=1.05,cex.main=1.05,cex.axis=1.05,label =c('quali'))
 
-# Factoshiny output command lines post manual treatment
-# nb <- missMDA::estim_ncpPCA(Study_data_selected_exam_without_duplicates_factoshiny,quali.sup=c(8))$ncp
-# dfcompleted <- missMDA::imputePCA(Study_data_selected_exam_without_duplicates_factoshiny,ncp=nb,quali.sup=c(8))$completeObs
-# res.PCA<-PCA(dfcompleted,quali.sup=c(8),graph=FALSE)
-# plot.PCA(res.PCA,choix='var',habillage = 'contrib',title="Graphe des variables de l'ACP")
-# plot.PCA(res.PCA,invisible=c('ind.sup'),select='cos2  0.7',habillage='Peak.Skin.Dose..mGy.',title="Graphe des individus de l'ACP",cex=1.05,cex.main=1.05,cex.axis=1.05,label =c('quali'))
+################ group statistical analysis #############################
 
+# compute classic statistical analysis for VA- group only
+globalstat_VA_minus <- summary(Study_data_selected_exam_without_duplicates_factoshiny %>% filter(VA == "VA-"))
+
+# compute classic statistical analysis for VA+ group only
+globalstat_VA_plus <- summary(Study_data_selected_exam_without_duplicates_factoshiny %>% filter(VA == "VA+"))
+
+# write excel file to communicate with other people
+print("Create output Excel file for data table and main statistics for VA- and VA+ group")
+write.xlsx(globalstat_VA_minus, "output/v2/globalstat_VA_minus.xlsx", sheetName = "globalstat_VA_minus",
+           col.names = TRUE, row.names = FALSE, append = FALSE, overwrite = TRUE)
+write.xlsx(globalstat_VA_plus, "output/v2/globalstat_VA_plus.xlsx", sheetName = "globalstat_VA_plus",
+           col.names = TRUE, row.names = FALSE, append = FALSE, overwrite = TRUE)
 
