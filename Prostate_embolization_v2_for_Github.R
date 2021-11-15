@@ -57,6 +57,12 @@ if(!require(FactoMineR)){
   library(FactoMineR)
 }
 
+# load grateful to list package used
+if(!require(grateful)){
+  install.packages("grateful")
+  library(grateful)
+}
+
 
 ###############################################################################################################
 ###############################################################################################################
@@ -283,4 +289,8 @@ write.xlsx(globalstat_VA_minus, "output/v2/globalstat_VA_minus.xlsx", sheetName 
            col.names = TRUE, row.names = FALSE, append = FALSE, overwrite = TRUE)
 write.xlsx(globalstat_VA_plus, "output/v2/globalstat_VA_plus.xlsx", sheetName = "globalstat_VA_plus",
            col.names = TRUE, row.names = FALSE, append = FALSE, overwrite = TRUE)
+
+## ####################### Miscellaneous #####################################
+# Create word document to list package citation
+cite_packages(out.format = "docx", out.dir = file.path(getwd(), "output/v2"))
 
