@@ -49,7 +49,7 @@ if(!require(tidyverse)){
 
 # load grateful to list package used
 if(!require(grateful)){
-  install.packages("grateful")
+  remotes::install_github("Pakillo/grateful")
   library(grateful)
 }
 
